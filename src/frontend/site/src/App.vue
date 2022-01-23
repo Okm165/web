@@ -1,15 +1,61 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <Header
+    @toggle-add-task="toggleAddTask"
+    title="Task Tracker"
+    :showAddTask="showAddTask"
+  />
+  <div v-show="showAddTask">
+    <AddTask @add-task="addTask" />
+  </div>
+  <Tasks
+    @delete-task="deleteTask"
+    @toggle-reminder="toggleReminder"
+    :tasks="tasks"
+  />
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import Header from './components/Header'
+import Tasks from './components/Tasks'
+import AddTask from './components/AddTask'
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    Header,
+    Tasks,
+    AddTask
+  },
+  data () {
+    return {
+      tasks: [],
+      showAddTask: false
+    }
+  },
+  methods: {
+    addTask (task) {
+      this.tasks = [...this.tasks, task]
+    },
+    toggleAddTask () {
+      this.showAddTask = !this.showAddTask
+    },
+    deleteTask (id) {
+      if (confirm('are you sure?')) {
+        this.tasks = this.tasks.filter((task) => task.id !== id)
+      }
+    },
+    toggleReminder (id) {
+      this.tasks = this.tasks.map((task) => task.id === id
+        ? { ...task, reminder: !task.reminder } : task)
+    },
+    async fetchTasks () {
+      const res = await fetch('http://localhost:5000/tasks')
+      const data = await res.json()
+      return data
+    }
+  },
+  async created () {
+    this.tasks = await this.fetchTasks()
   }
 }
 </script>
